@@ -1,15 +1,23 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "hello-world.fullname" . }}
+  name: rls1-hello-world-lb
+  namespace: vault2
   labels:
-    {{- include "hello-world.labels" . | nindent 4 }}
+    app.kubernetes.io/instance: rls1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hello-world
+  annotations:
+    # Optional: Forces GCP to provision a Regional External Layer 4 Network Load Balancer (recommended)
+    cloud.google.com/l4-rxlb: "true" 
 spec:
-  type: {{ .Values.service.type }}
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
-      protocol: TCP
-      name: http
+  type: LoadBalancer
   selector:
-    {{- include "hello-world.selectorLabels" . | nindent 4 }}
+    # These must exactly match the labels under spec.template.metadata.labels in your deployment
+    app.kubernetes.io/instance: rls1
+    app.kubernetes.io/name: hello-world
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80         # The port the external load balancer will listen on
+    targetPort: 80   # The containerPort your Nginx application is listening on
